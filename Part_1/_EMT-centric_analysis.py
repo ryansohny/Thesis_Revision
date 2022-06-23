@@ -253,8 +253,6 @@ stats.pearsonr(data['TGFB1'], data['EMT-index_Cristescu'])
 
 plt.rcParams['figure.figsize'] = (7,7)
 
-
-
 # For Guo et al. and Cristescu et al.
 label_orders = ['EMT-high', 'EMT-low']
 g = sns.lmplot(data=tcga_ws76, x='EMT-index_Cristescu', y='Norm_WS_EMT', hue='Defined by EMT index', palette={'EMT-low':'midnightblue', 'EMT-high':'darkred'}, fit_reg=False, facet_kws={'legend_out':True})
