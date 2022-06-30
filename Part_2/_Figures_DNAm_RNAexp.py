@@ -28,6 +28,8 @@ dmr = sc.AnnData(dmr_met.iloc[:, 84:].T) # Only Tumor
 dmr.raw = dmr
 dmr.layers['Percent_met'] = dmr.X
 
+clinic_info = pd.read_csv("2022_WC300_clinical_information_Xadded_ver2.0.csv", index_col=0)
+
 dmr.obs = clinic_info.iloc[84:, :].copy()
 
 sc.pp.scale(dmr)
