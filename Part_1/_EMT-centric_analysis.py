@@ -1,12 +1,13 @@
 # cm03 wc300_ver2 environment
 # ipython --profile=thesis
 
-import matplotlib_ven
+import matplotlib_venn
 from matplotlib_venn import venn3
 import seaborn as sns
 import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 import scipy
 import scipy.stats as stats
 plt.rcParams['figure.figsize'] = (7,7)
@@ -15,7 +16,7 @@ sns.set(font="Arial", font_scale=1.2, style='ticks')
 %matplotlib
 
 # Version Info
-print(matplotlib_ven.__version__) # 0.11.7
+print(matplotlib_venn.__version__) # 0.11.7
 print(sns.__version__) # 0.11.2
 print(matplotlib.__version__) # 3.4.3
 print(pd.__version__) # 1.3.5
@@ -274,3 +275,41 @@ tcga_ws76['EMT Groups (Guo et al.)'] = np.select(conditions_guo, choices_guo, de
 conditions_cristescu = [(tcga_ws76['EMT-index_Cristescu'] > tcga_ws76['EMT-index_Cristescu'].median()), (tcga_ws76['EMT-index_Cristescu'] <= tcga_ws76['EMT-index_Cristescu'].median())]
 choices_cristescu = ['EMT(+)', 'EMT(-)']
 tcga_ws76['EMT Groups (Cristescu et al.)'] = np.select(conditions_cristescu, choices_cristescu, default='NA')
+
+# TCGA subtypes
+tcga_subtypes = pd.read_csv("TCGA_OV_EMThighlow_TCGAsubtypes.csv", index_col=0)
+
+tcga_ws76_reindex = list(map(lambda x: x[:-1], list(tcga_ws76.index))) # reindexing tcga_ws76 to match id with that of tcga_subtypes
+tcga_ws76.index = tcga_ws76_reindex
+
+new_tcga_ws76 = pd.concat([tcga_ws76, pd.DataFrame(tcga_subtypes.loc[:, 'gene_expression_subtype'])], axis=1)
+
+type_palette = {'proliferative': '#4B0082', 'differentiated': '#CD853F', 'immunoreactive': '#228B22', 'mesenchymal': '#800000'}
+dot_palette_sohn = {'EMT-high': '#FF0000', 'EMT-low': '#0000FF'}
+dot_palette_cristescu = {'EMT(+)': '#FF0000', 'EMT(-)': '#0000FF'}
+dot_palette_guo = {'Mesenchymal': '#FF0000', 'Epithelial': '#0000FF'}
+
+# Sohn
+p = sns.violinplot(data=new_tcga_ws76, x="gene_expression_subtype", y="EMT-index", order=["proliferative", "differentiated", "immunoreactive", "mesenchymal"], inner=None, palette=type_palette)
+p = sns.swarmplot(data=new_tcga_ws76, x="gene_expression_subtype", y="EMT-index", order=["proliferative", "differentiated", "immunoreactive", "mesenchymal"], color=".5", size=3, hue="Defined by EMT index", palette=dot_palette_sohn)
+sns.despine()
+
+# Cristescu
+p = sns.violinplot(data=new_tcga_ws76, x="gene_expression_subtype", y="EMT-index_Cristescu", order=["proliferative", "differentiated", "immunoreactive", "mesenchymal"], inner=None, palette=type_palette)
+p = sns.swarmplot(data=new_tcga_ws76, x="gene_expression_subtype", y="EMT-index_Cristescu", order=["proliferative", "differentiated", "immunoreactive", "mesenchymal"], color=".5", size=3, hue="EMT Groups (Cristescu et al.)", palette=dot_palette_cristescu)
+p.set_xticklabels(['Proliferative', 'Differentiated', 'Immunoreactive', 'Mesenchymal'])
+p.legend(title='Group defined by method\nfrom Cristescu et al.', loc='upper center', frameon=False)
+p.set_xlabel("TCGA HGSOC subtypes")
+p.set_ylabel("EMT index from Cristescu et al.")
+sns.despine()
+plt.tight_layout()
+
+# Guo
+p = sns.violinplot(data=new_tcga_ws76, x="gene_expression_subtype", y="Norm_WS_EMT", order=["proliferative", "differentiated", "immunoreactive", "mesenchymal"], inner=None, palette=type_palette)
+p = sns.swarmplot(data=new_tcga_ws76, x="gene_expression_subtype", y="Norm_WS_EMT", order=["proliferative", "differentiated", "immunoreactive", "mesenchymal"], color=".5", size=3, hue="EMT Groups (Guo et al.)", palette=dot_palette_guo)
+p.set_xticklabels(['Proliferative', 'Differentiated', 'Immunoreactive', 'Mesenchymal'])
+p.legend(title='Group defined by method\nfrom Guo et al.', loc='lower center', frameon=False)
+p.set_xlabel("TCGA HGSOC subtypes")
+p.set_ylabel("EMT index from Guo et al.")
+sns.despine()
+plt.tight_layout()
